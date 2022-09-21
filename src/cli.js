@@ -1,3 +1,1 @@
-const mdLinks = (path, options) => {
-    
-}
+const { mdLinks } = require ('./index.js');
