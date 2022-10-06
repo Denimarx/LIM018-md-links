@@ -2,8 +2,10 @@ const fs = require("fs");
 const path = require('path');
 const fetch = require('node-fetch');
 
+const prueba1Md = "prueba1.md"
 const prueba3Md = "prueba3.md"
 const srcPrueba3 = "./src/prueba3.md";
+const srcPrueba1 = "./src/prueba1.md";
 const dirMyCarpeta ="./MiCarpeta/subCarpeta";
 const dirMyCarpetaprueba1Md ="./MiCarpeta/subCarpeta/prueba1.md";
 const dirMyCarpetaprueba5Md ="./MiCarpeta/subCarpeta/prueba5.md";
@@ -18,13 +20,13 @@ const existPath = (route) => fs.existsSync(route);
 // 2. La ruta es absoluta?
 const isAbsolute = (route) => path.isAbsolute(route);
 //console.log(isAbsolute (dirMyCarpeta))
-//console.log(isAbsolute (srcPrueba3 ))
+//console.log(isAbsolute (srcPrueba1 ))
 //console.log(isAbsolute (prueba3Md))
 
 // 3. Convertir ruta a Absoluta
 const resolveAbsolute = (route) => path.resolve(route);
 //console.log(resolveAbsolute (dirMyCarpeta))
-//console.log(resolveAbsolute (srcPrueba3 ))
+//console.log(resolveAbsolute ("./src/prueba1.md" ))
 //console.log(resolveAbsolute (prueba3Md))
 
 // 4. es un directorio?
@@ -33,11 +35,20 @@ const isDirectory = (route) => fs.statSync(route).isDirectory();
 //console.log(isDirectory(srcPrueba3 )) // error no es dir
 //console.log(isDirectory(prueba3Md)) // error
 
-// 5. si es directorio, leer
+// 4.1 es un archivo?
+const isFile = (route) => fs.statSync(route).isFile();
+//console.log(isFile(dirMyCarpeta)) //  false
+//console.log(isFile(srcPrueba3 )) // true
+//console.log(isFile("prueba3.md")) // error
+
+// 5.  leer directorio
 const readDir = (routeDir) => fs.readdirSync(routeDir);
-// console.log(readDir(dirMyCarpeta))  // si lo lee
+//console.log(readDir(dirMyCarpeta))  // si lo lee
 // console.log(readDir(srcPrueba3 )) // no lo lee
 // console.log(readDir(prueba3Md)) // no lee
+
+
+
 
 // 6. archivo tiene extension md?
 const isMd = (route) => {
@@ -57,17 +68,14 @@ const isMd = (route) => {
 
 
 // 7.Leer el archivo md
-  const readFile = (pathfile) => fs.readFileSync(pathfile, 'utf8');
-  //console.log(readFile(prueba3Md)); // no leee 
-  //console.log(readFile(dirMyCarpeta))  // no lee
- //console.log(readFile(prueba3Md)) //  no lee 
- //console.log(readFile(dirMyCarpetaprueba2txt)) //  "No es un archivo md"
- //console.log(readFile(srcPrueba3)) // SI LEE**************
- //console.log(readFile(dirMyCarpetaprueba5Md)) //   SI LEE************
+const readFile = (theFile) => fs.readFileSync(theFile, 'utf-8');
+//console.log(readFile(srcPrueba3)) //  lee
+//console.log(readFile(prueba3Md)) //   no lee
 
   //8. Obtener los links del archivo .md en array
  
  const allLinks = (theFile) => {
+  console.log(theFile)
     let theLinks = []; //array de links
     const readFile = fs.readFileSync(theFile, 'utf-8'); // leo archivo
     //console.log(readFile) // lee todo texto y links  ***************
@@ -96,13 +104,28 @@ const isMd = (route) => {
   //console.log(allLinks("./MiCarpeta/subCarpeta/prueba5.md"))//si lee
   //allLinks(dirMyCarpetaprueba1Md) // 
   //console.log(allLinks("./src/prueba3.md"))
+  //console.log(allLinks("./MiCarpeta/subCarpeta/prueba2.txt"))
   
+
+  const getLinksOfDir = (arrayFiles) => {
+    const linksObtenidos = [];
+    for(let i=0; i<arrayFiles.length; i++){
+      const links = allLinks(arrayFiles[i]);
+      linksObtenidos.push(links);
+    }
+    return linksObtenidos.flat();
+  }
+  //console.log(getLinksOfDir("./MiCarpeta/subCarpeta"))
+  
+
+
+
 
 //ejemplo para probar que fetch funciona
    /*  fetch('https://www.google.com/')
        .then(res => console.log(res))
        .catch(err => console.error(err)) */
-    
+
   //9.  Validar los links
 const validate = (arrLi) => { // tengo q darle un array de links
   const statusArr = arrLi.map((obj) => {// para cada uno debe dev otro array
@@ -127,19 +150,24 @@ const validate = (arrLi) => { // tengo q darle un array de links
     });
   return Promise.all(statusArr);
 };
-/*
-validate(allLinks("./MiCarpeta/subCarpeta/prueba5.md")).then ( (obj) => {
-  console.log(obj)
-  });
- */ 
+//validate(allLinks("./MiCarpeta/subCarpeta/prueba5.md"))
+//.then ( (obj) => {console.log(obj)});
+ 
+
 
 const stats = (arrLinks) => {
   const Total = arrLinks.length;
-  const mapLinks = arrLinks.map((obj) =>  obj.href) ;
+  const mapLinks = arrLinks.map((obj) =>  obj.ok);
   const Unique = new Set(mapLinks).size;
-  const statsLinks = { Total, Unique };
+  const brokenL = arrLinks.filter( link => link.status != 200);
+  //console.log(brokenL)
+  const Broken = brokenL.length
+
+  const statsLinks = { Total, Unique, Broken };
   return statsLinks;
+  
 };
+
 //stats(allLinks("./MiCarpeta/subCarpeta/prueba5.md"))
 //console.log(stats(allLinks("./MiCarpeta/subCarpeta/prueba5.md")))
 
@@ -147,12 +175,14 @@ module.exports = {
   existPath,
   isAbsolute,
   resolveAbsolute,
+  isFile,
   isDirectory,
   readDir,
   isMd,
   readFile,
   allLinks,
   validate,
-  stats
+  stats,
+  getLinksOfDir
 }
 

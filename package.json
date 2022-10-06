@@ -14,8 +14,11 @@
     "test": "test"
   },
   "scripts": {
-    "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./src/index.js",
+    "tests": "jest --coverage"
+  },
+  "bin": {
+    "md-links": "./src/cli.js"
   },
   "repository": {
     "type": "git",
@@ -26,5 +29,8 @@
   "bugs": {
     "url": "https://github.com/Denimarx/LIM018-md-links/issues"
   },
-  "homepage": "https://github.com/Denimarx/LIM018-md-links#readme"
+  "homepage": "https://github.com/Denimarx/LIM018-md-links#readme",
+  "devDependencies": {
+    "jest": "^29.0.3"
+  }
 }
